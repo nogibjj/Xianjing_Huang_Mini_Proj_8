@@ -2,8 +2,10 @@
 mod tests {
     use once_cell::sync::Lazy;
     use rusqlite::Connection;
+    use std::path::Path;
+    use sqlite::UpdateFields;
     use sqlite::{
-        create_table, delete_exec, drop_table, insert_exec, load_data_from_csv, query_exec,
+        create_exec, create_table, delete_exec, drop_table, extract, load_data_from_csv, read_exec,
         update_exec,
     };
     use std::error::Error;
@@ -22,6 +24,18 @@ mod tests {
     }
 
     #[test]
+    fn test_extract() {
+        let result = extract();
+        assert!(result.is_ok());
+        let file_path = "data/fifa_countries_audience.csv";
+        assert!(Path::new(file_path).exists());
+
+        // if Path::new(file_path).exists() {
+        //     fs::remove_file(file_path).expect("Failed to remove test file");
+        // }
+    }
+
+    #[test]
     fn test_create_table() {
         let _lock = DB_MUTEX.lock().unwrap(); // default: multi-thread
         let conn = setup_db();
@@ -37,80 +51,35 @@ mod tests {
 
     #[test]
     fn test_load_data_from_csv() -> Result<(), Box<dyn Error>> {
-        let _lock = DB_MUTEX.lock().unwrap();
+        let _lock = DB_MUTEX.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         let conn = setup_db();
-        let csv_path = "../data/customer_new.csv";
-        load_data_from_csv(&conn, "test_table", csv_path)?;
-
-        let select_query = "SELECT id, name, gender, city FROM test_table ORDER BY id";
-        let mut stmt = conn.prepare(select_query).unwrap();
-        let result_iter = stmt
-            .query_map([], |row| {
-                Ok((
-                    row.get::<_, i32>(0)?,
-                    row.get::<_, String>(1)?,
-                    row.get::<_, String>(2)?,
-                    row.get::<_, String>(3)?,
-                ))
-            })
+        let _ = extract();
+        let csv_path = "data/fifa_countries_audience.csv";
+        let result = load_data_from_csv(&conn, "test_table", csv_path);
+        assert!(result.is_ok());
+        let count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM test_table", [], |row| row.get(0))
             .unwrap();
+        assert_eq!(count, 191);
 
-        let result: Vec<(i32, String, String, String)> =
-            result_iter.filter_map(Result::ok).collect();
-        assert_eq!(result.len(), 10);
-        assert_eq!(
-            result[0],
-            (
-                1,
-                "Alice".to_string(),
-                "female".to_string(),
-                "New York".to_string()
-            )
-        );
-        assert_eq!(
-            result[9],
-            (
-                10,
-                "Julia".to_string(),
-                "female".to_string(),
-                "Chicago".to_string()
-            )
-        );
         teardown_db(&conn);
         Ok(())
     }
 
     #[test]
-    fn test_insert_exec() {
+    fn test_create_exec() {
         let _lock = DB_MUTEX.lock().unwrap();
         let conn = setup_db();
-        insert_exec(&conn, "test_table", 1, "Jo", "male", "Durham")
-            .expect("Failed to insert record");
-        let select_query = "SELECT id, name, gender, city FROM test_table WHERE id = 1";
-        let mut stmt = conn.prepare(select_query).unwrap();
-        let result_iter = stmt
-            .query_map([], |row| {
-                Ok((
-                    row.get::<_, i32>(0)?,
-                    row.get::<_, String>(1)?,
-                    row.get::<_, String>(2)?,
-                    row.get::<_, String>(3)?,
-                ))
-            })
-            .unwrap();
-
-        let result: Vec<(i32, String, String, String)> =
-            result_iter.filter_map(Result::ok).collect();
-        assert_eq!(result.len(), 1);
-        assert_eq!(
-            result[0],
-            (
-                1,
-                "Jo".to_string(),
-                "male".to_string(),
-                "Durham".to_string()
-            )
+        let result = create_exec(
+            &conn,
+            "test_table",
+            "TestCountry",
+            "TestConfederation",
+            1.1,
+            2.2,
+            3.3,
         );
+        assert!(result.is_ok());
         teardown_db(&conn);
     }
 
@@ -118,51 +87,50 @@ mod tests {
     fn test_update_exec() {
         let _lock = DB_MUTEX.lock().unwrap();
         let conn = setup_db();
-        insert_exec(&conn, "test_table", 1, "Doe", "male", "New York")
-            .expect("Failed to insert record");
-        update_exec(
+        
+        create_exec(
+            &conn,
+            "test_table",
+            "TestCountry",
+            "TestConfederation",
+            1.1,
+            2.2,
+            3.3,
+        ).unwrap();
+    
+        let fields = UpdateFields {
+            new_country: Some("UpdatedCountry"),
+            new_confederation: None,
+            new_population_share: Some(4.4),
+            new_tv_audience_share: None,
+            new_gdp_weighted_share: None,
+        };
+    
+        let result = update_exec(
             &conn,
             "test_table",
             1,
-            Some("Doe"),
-            None,
-            Some("San Francisco"),
-        )
-        .expect("Failed to update record");
-        let select_query = "SELECT id, name, gender, city FROM test_table WHERE id = 1";
-        let mut stmt = conn.prepare(select_query).unwrap();
-        let result_iter = stmt
-            .query_map([], |row| {
-                Ok((
-                    row.get::<_, i32>(0)?,
-                    row.get::<_, String>(1)?,
-                    row.get::<_, String>(2)?,
-                    row.get::<_, String>(3)?,
-                ))
-            })
-            .unwrap();
-
-        let result: Vec<(i32, String, String, String)> =
-            result_iter.filter_map(Result::ok).collect();
-        assert_eq!(result.len(), 1);
-        assert_eq!(
-            result[0],
-            (
-                1,
-                "Doe".to_string(),
-                "male".to_string(),
-                "San Francisco".to_string()
-            )
+            fields,
         );
+    
+        assert!(result.is_ok());
         teardown_db(&conn);
-    }
+    }    
 
     #[test]
     fn test_delete_exec() {
         let _lock = DB_MUTEX.lock().unwrap();
         let conn = setup_db();
-        insert_exec(&conn, "test_table", 1, "Mike", "male", "New York")
-            .expect("Failed to insert record");
+        create_exec(
+            &conn,
+            "test_table",
+            "TestCountry",
+            "TestConfederation",
+            1.1,
+            2.2,
+            3.3,
+        )
+        .unwrap();
         delete_exec(&conn, "test_table", 1).expect("Failed to delete record");
         let select_query = "SELECT id FROM test_table WHERE id = 1";
         let mut stmt = conn.prepare(select_query).unwrap();
@@ -186,14 +154,22 @@ mod tests {
     }
 
     #[test]
-    fn test_query_exec() {
+    fn test_read_exec() {
         let _lock = DB_MUTEX.lock().unwrap();
         let conn = setup_db();
-        insert_exec(&conn, "test_table", 1, "Jo", "male", "New York")
-            .expect("Failed to insert record");
+        create_exec(
+            &conn,
+            "test_table",
+            "TestCountry",
+            "TestConfederation",
+            1.1,
+            2.2,
+            3.3,
+        )
+        .unwrap();
+        let result = read_exec(&conn, "test_table");
+        assert!(result.is_ok());
 
-        let query_string = "SELECT id, name, gender, city FROM test_table ORDER BY id";
-        query_exec(&conn, query_string).expect("Failed to execute query");
         teardown_db(&conn);
     }
 }

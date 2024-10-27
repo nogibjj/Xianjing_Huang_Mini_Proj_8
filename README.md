@@ -1,9 +1,9 @@
-# Xianjing_Huang_Mini_Proj_7
+# Xianjing_Huang_Mini_Proj_8
 [![CI](https://github.com/nogibjj/Xianjing_Huang_Mini_Proj_7/actions/workflows/CI.yml/badge.svg)](https://github.com/nogibjj/Xianjing_Huang_Mini_Proj_7/actions/workflows/CI.yml)
 
 ### Directory Tree Structure
 ```
-Xianjing_Huang_Mini_Proj_7/
+Xianjing_Huang_Mini_Proj_8/
 ├── .devcontainer/
 │   ├── devcontainer.json
 │   └── Dockerfile

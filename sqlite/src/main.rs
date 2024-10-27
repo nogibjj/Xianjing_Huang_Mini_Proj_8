@@ -5,8 +5,10 @@
 //user defined arguments and call lib.rs logic to handle them
 use clap::{Parser, Subcommand};
 use rusqlite::{Connection, Result};
+use sqlite::UpdateFields;
 use sqlite::{
-    create_table, delete_exec, drop_table, insert_exec, load_data_from_csv, query_exec, update_exec,
+    create_exec, create_table, delete_exec, drop_table, extract, load_data_from_csv, read_exec,
+    update_exec,
 };
 
 //Here we define a struct (or object) to hold our CLI arguments
@@ -29,49 +31,53 @@ struct Cli {
 //By separating out the commands as enum types we can easily match what the user is
 //trying to do in main
 enum Commands {
+    ///Extract a url to a file path
+    #[command(alias = "e", short_flag = 'e')]
+    Extract {},
     ///Pass a table name to create a table
     /// "sqlite -c table1"
     #[command(alias = "c", short_flag = 'c')]
     Create { table_name: String },
     ///Pass a table name and a file path to load data from csv
-    /// "sqlite -l table1 ../data/customer_new.csv"
+    /// "sqlite -l table1 data/fifa_countries_audience.csv"
     #[command(alias = "l", short_flag = 'l')]
     Load {
         table_name: String,
         file_path: String,
     },
-    ///Pass a query string to select and read data
-    /// "sqlite -q "SELECT * FROM table1;""
-    /// "sqlite -q "SELECT name, city FROM table1;""
-    /// "sqlite -q "SELECT * FROM table1 WHERE city = 'New York';""
+    ///Pass a table name to read data
+    /// "sqlite -q table1"
     #[command(alias = "q", short_flag = 'q')]
-    Query { query: String },
+    Query { table_name: String },
     ///Pass a table name to drop
     /// "sqlite -d table1"
     #[command(alias = "d", short_flag = 'd')]
     Drop { table_name: String },
     ///Pass a new record to insert
-    /// "sqlite -i table1 11 Remi female Durham"
+    /// "sqlite -i table1 TestCountry1 TestConfederation2 0.1 0.2 0.3"
     #[command(alias = "i", short_flag = 'i')]
     Insert {
         table_name: String,
-        id: i32,
-        name: Option<String>,
-        gender: Option<String>,
-        city: Option<String>,
+        country: String,
+        confederation: String,
+        population_share: f64,
+        tv_audience_share: f64,
+        gdp_weighted_share: f64,
     },
     ///Pass a new record to update
-    /// "sqlite -u table1 11 Remi female 'Los Angeles'"
+    /// "sqlite -u table1 192 TestCountry1 TestConfederation2 1.1 2.2 3.3"
     #[command(alias = "u", short_flag = 'u')]
     Update {
         table_name: String,
         id: i32,
-        new_name: Option<String>,
-        new_gender: Option<String>,
-        new_city: Option<String>,
+        new_country: Option<String>,
+        new_confederation: Option<String>,
+        new_population_share: Option<f64>,
+        new_tv_audience_share: Option<f64>,
+        new_gdp_weighted_share: Option<f64>,
     },
     ///Delete a record by id
-    /// "sqlite -x table1 11"
+    /// "sqlite -x table1 192"
     #[command(alias = "x", short_flag = 'x')]
     Delete { table_name: String, id: i32 },
 }
@@ -84,13 +90,17 @@ fn main() -> Result<()> {
 
     //Here we can match the behavior on the subcommand and call our lib logic
     match args.command {
+        Commands::Extract {} => {
+            println!("Extract a url to a file path");
+            extract().expect("Failed to extract");
+        }
         Commands::Create { table_name } => {
             println!("Creating Table {}", table_name);
             create_table(&conn, &table_name).expect("Failed to create table");
         }
-        Commands::Query { query } => {
-            println!("Query: {}", query);
-            query_exec(&conn, &query).expect("Failed to execute query");
+        Commands::Query { table_name } => {
+            println!("Read Table: {}", table_name);
+            read_exec(&conn, &table_name).expect("Failed to execute query");
         }
         Commands::Drop { table_name } => {
             println!("Deleting: {}", table_name);
@@ -109,42 +119,45 @@ fn main() -> Result<()> {
         }
         Commands::Insert {
             table_name,
-            id,
-            name,
-            gender,
-            city,
+            country,
+            confederation,
+            population_share,
+            tv_audience_share,
+            gdp_weighted_share,
         } => {
             println!(
-                "Insert record in table '{}' with ID {}, name {:?}, gender {:?}, city {:?}",
-                table_name, id, name, gender, city
+                "Insert record in table '{}' with country {}, confederation {}, population_share {}, tv_audience_share {}, gdp_weighted_share {}",
+                table_name, country, confederation, population_share, tv_audience_share, gdp_weighted_share
             );
-            insert_exec(
+            create_exec(
                 &conn,
                 &table_name,
-                id,
-                name.as_deref().unwrap_or("Unknown"),
-                gender.as_deref().unwrap_or("Unknown"),
-                city.as_deref().unwrap_or("Unknown"),
+                &country,
+                &confederation,
+                population_share,
+                tv_audience_share,
+                gdp_weighted_share,
             )
             .expect("Failed to insert record");
         }
         Commands::Update {
             table_name,
             id,
-            new_name,
-            new_gender,
-            new_city,
+            new_country,
+            new_confederation,
+            new_population_share,
+            new_tv_audience_share,
+            new_gdp_weighted_share,
         } => {
             println!("Updating record in table '{}' with ID {}", table_name, id);
-            update_exec(
-                &conn,
-                &table_name,
-                id,
-                new_name.as_deref(),
-                new_gender.as_deref(),
-                new_city.as_deref(),
-            )
-            .expect("Failed to update record");
+            let fields = UpdateFields {
+                new_country: new_country.as_deref(),
+                new_confederation: new_confederation.as_deref(),
+                new_population_share,
+                new_tv_audience_share,
+                new_gdp_weighted_share,
+            };
+            update_exec(&conn, &table_name, id, fields).expect("Failed to update record");
         }
         Commands::Delete { table_name, id } => {
             println!("Delete record in table '{}' with ID {}", table_name, id);
