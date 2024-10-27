@@ -6,7 +6,6 @@ from mylib.extract import extract
 from mylib.transform_load import load
 from mylib.query import create_CRUD, read_CRUD, update_CRUD, delete_CRUD
 import time
-from memory_profiler import memory_usage
 import psutil
 
 def track_resource_usage():
