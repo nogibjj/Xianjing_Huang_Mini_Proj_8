@@ -156,3 +156,11 @@ Total Execution Time for all commands: 0.28 seconds
 
 Peak Memory Usage across all commands: 17.33 MB
 
+## Summary of Improvements
+The Python version completes the process a little bit faster while Rust uses less memory for this particular dataset. 
+
+Rust, generally outperforms Python for CPU-bound tasks and is optimized for memory and performance in long-running applications or complex, multi-threaded scenarios. However, Python can sometimes be faster for certain types of tasks, especially I/O-bound or simple computational tasks, due to its fast startup, efficient libraries, and ability to handle asynchronous operations effectively. **In this case**, Python being faster than Rust is likely due to I/O-heavy operations or quick, short tasks.
+
+For resource usage, Rust has a clear advantage due to its unique memory management model, which eliminates the need for a garbage collector. Python, on the other hand, uses dynamic typing and relies on garbage collection, which can lead to higher memory usage and occasional pauses during cleanup cycles. **In this case**, we see that Rust used significantly less memory than Python for the same task. This difference—around 13.31 MB less memory in Rust—demonstrates Rust’s efficiency in resource management.
+
+In essence, Rust is better suited for scenarios where performance and efficient resource management are critical, like systems programming and high-performance applications. Python, however, remains highly productive for rapid development and prototyping, especially in areas like data science, where speed and memory usage can be traded off for ease of development.
