@@ -8,11 +8,13 @@ from mylib.query import create_CRUD, read_CRUD, update_CRUD, delete_CRUD
 import time
 import psutil
 
+
 def track_resource_usage():
     process = psutil.Process()
     mem_info = process.memory_info()
     print(f"Memory Usage: {mem_info.rss / (1024 * 1024):.2f} MB")
     print(f"CPU Time: {process.cpu_times().user:.2f} seconds")
+
 
 # Extract
 print("Extracting data...")
