@@ -1,5 +1,6 @@
 # Xianjing_Huang_Mini_Proj_8
-[![CI](https://github.com/nogibjj/Xianjing_Huang_Mini_Proj_7/actions/workflows/CI.yml/badge.svg)](https://github.com/nogibjj/Xianjing_Huang_Mini_Proj_7/actions/workflows/CI.yml)
+[![Python CI](https://github.com/nogibjj/Xianjing_Huang_Mini_Proj_8/actions/workflows/PythonCI.yml/badge.svg)](https://github.com/nogibjj/Xianjing_Huang_Mini_Proj_8/actions/workflows/PythonCI.yml)
+[![Rust CI](https://github.com/nogibjj/Xianjing_Huang_Mini_Proj_8/actions/workflows/RustCI.yml/badge.svg)](https://github.com/nogibjj/Xianjing_Huang_Mini_Proj_8/actions/workflows/RustCI.yml)
 
 ### Python Project Structure
 ```
@@ -114,7 +115,7 @@ See result in [Performance Report](performance_report.md)
 
 
 ### Binary Download Link
-https://github.com/nogibjj/Xianjing_Huang_Mini_Proj_8/actions/runs/11542766983/artifacts/2109506629
+https://github.com/nogibjj/Xianjing_Huang_Mini_Proj_8/actions/runs/11545950122/artifacts/2110120943
 
 The binary location is what gets uploaded as an artifact in the yml file.
 ![2](/imgs/002.png)
