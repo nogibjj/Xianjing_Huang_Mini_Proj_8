@@ -28,21 +28,26 @@ print("Transforming data successfully!")
 # CRUD
 print("Read Database...")
 results = read_CRUD()
-for row in results:
+max_rows = 10
+for i, row in enumerate(results):
+    if i >= max_rows:
+        print(f"...\nand {len(results) - max_rows} more rows not shown")
+        break
     print(row)
-print("Insert a record...")
+
+print("Insert a record: 'TestCountry1', 'TestConfederation2', 0.1, 0.2, 0.3 ")
 create_CRUD("TestCountry1", "TestConfederation2", 0.1, 0.2, 0.3)
 # print("Read Database after create...")
 # results = read_CRUD()
 # for row in results:
 #     print(row)
-print("Update a record...")
+print("Update a record: 'TestCountry1', 'TestConfederation2', 1.1, 1.2, 1.3, 192")
 update_CRUD("TestCountry1", "TestConfederation2", 1.1, 1.2, 1.3, 192)
 # print("Read Database after update...")
 # results = read_CRUD()
 # for row in results:
 #     print(row)
-print("Delete a record...")
+print("Delete a record: id: 192")
 delete_CRUD(192)
 # print("Read Database after delete...")
 # results = read_CRUD()

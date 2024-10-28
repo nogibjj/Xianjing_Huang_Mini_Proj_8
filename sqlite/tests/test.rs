@@ -2,13 +2,13 @@
 mod tests {
     use once_cell::sync::Lazy;
     use rusqlite::Connection;
-    use std::path::Path;
     use sqlite::UpdateFields;
     use sqlite::{
         create_exec, create_table, delete_exec, drop_table, extract, load_data_from_csv, read_exec,
         update_exec,
     };
     use std::error::Error;
+    use std::path::Path;
     use std::sync::Mutex;
 
     static DB_MUTEX: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
@@ -51,7 +51,9 @@ mod tests {
 
     #[test]
     fn test_load_data_from_csv() -> Result<(), Box<dyn Error>> {
-        let _lock = DB_MUTEX.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let _lock = DB_MUTEX
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         let conn = setup_db();
         let _ = extract();
         let csv_path = "data/fifa_countries_audience.csv";
@@ -87,7 +89,7 @@ mod tests {
     fn test_update_exec() {
         let _lock = DB_MUTEX.lock().unwrap();
         let conn = setup_db();
-        
+
         create_exec(
             &conn,
             "test_table",
@@ -96,8 +98,9 @@ mod tests {
             1.1,
             2.2,
             3.3,
-        ).unwrap();
-    
+        )
+        .unwrap();
+
         let fields = UpdateFields {
             new_country: Some("UpdatedCountry"),
             new_confederation: None,
@@ -105,17 +108,12 @@ mod tests {
             new_tv_audience_share: None,
             new_gdp_weighted_share: None,
         };
-    
-        let result = update_exec(
-            &conn,
-            "test_table",
-            1,
-            fields,
-        );
-    
+
+        let result = update_exec(&conn, "test_table", 1, fields);
+
         assert!(result.is_ok());
         teardown_db(&conn);
-    }    
+    }
 
     #[test]
     fn test_delete_exec() {

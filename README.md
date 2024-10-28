@@ -1,70 +1,81 @@
 # Xianjing_Huang_Mini_Proj_8
 [![CI](https://github.com/nogibjj/Xianjing_Huang_Mini_Proj_7/actions/workflows/CI.yml/badge.svg)](https://github.com/nogibjj/Xianjing_Huang_Mini_Proj_7/actions/workflows/CI.yml)
 
-### Directory Tree Structure
+### Python Project Structure
 ```
-Xianjing_Huang_Mini_Proj_8/
-├── .devcontainer/
-│   ├── devcontainer.json
-│   └── Dockerfile
+.
+├── mylib
+│   ├── extract.py            # Extract a dataset from a URL
+│   ├── query.py              # CRUD and log funcitons
+│   └── transform_load.py     # Transforms and Loads data into the local SQLite3 database
+├── main.py                   # Perform CRUD, add log, track running time and memory usage
+└── test_main.py              # test main
+```
+### RUST Project Structure
+```
+.
+├── sqlite/
+│   ├── data/
+│   ├── src/
+│   │   ├── lib.rs            # ETL-CRUD funcitons
+│   │   └── main.rs           # Create a list of commands, 
+│   │                           track running time and memory usage
+│   ├── tests/                # Test for lib
+│   ├── Cargo.lock            
+│   ├── Cargo.toml            # Package and dependencies
+│   ├── Makefile              # Defines scripts for common project tasks 
+│   │                           such as cargo check, cargo build.
+│   └── my_database.db
+```
+### Continuous Integration (CI/CD Pipeline)
+```
+.
 ├── .github/
 │   └── workflows/
-│       └── CI.yml
-├── add/
-│   ├── src/
-│   ├── Cargo.lock
-│   ├── Cargo.toml
-│   └── Makefile
-├── data/
-│   └── customer_new.csv
-├── imgs/
-├── sqlite/
-│   ├── src/
-│   │   ├── lib.rs
-│   │   └── main.rs
-│   ├── target/
-│   │   └── test.rs
-│   ├── tests/
-│   ├── Cargo.lock
-│   ├── Cargo.toml
-│   ├── Makefile
-│   └── my_database.db
-├── .gitignore
-└── README.md
+│       ├── PythonCI.yml      # Defines the GitHub Actions workflow for 
+│       │                       Install, Lint, Format, Test, generate_and_push
+│       └── RustCI.yml        # Defines the GitHub Actions workflow for 
+                                Check, Format, Test, Release, Upload
+                                Binary Artifact
 ```
-`Cargo.toml`: Package and dependencies.
-
-`sqlite/src/lib.rs`: 
-- `create_table`: Create a table.
-- `load_data_from_csv`: Load data from a file path to a table.
-- `drop_table`: Drop a table.
-- `query_exec`: Read records in table.
-- `update_exec`: Update a record in the table.
-- `insert_exec`: Insert a record in the table.
-- `delete_exec`: Delete a record in the table.
-
-`sqlite/src/main.rs`: 
-Handle CLI features by parsing input as one of 7 options: Create, Query, Drop, Load, Insert, Update, Delete. 
-
-`sqlite/tests/test.rs`: Test for lib.
-
-`Makefile`: Defines scripts for common project tasks such as cargo check, cargo build.
-
-`CI.yml`: Defines the GitHub Actions workflow for Check, Format, Test, Release, Upload Binary Artifact.
 
 ### Requirements
-* Package a Python script with setuptools or a similar tool
-* Include a user guide on how to install and use the tool
-* Include communication with an external or internal database (NoSQL, SQL, etc) [If you use Rust you can skip the DB part]
+* Take an existing Python script for data processing
+* Rewrite it in Rust
+* Highlight improvements in speed and resource usage
 
+## Performance Comparison: Python vs. Rust
 
-### Preparation
+| Metric               | Python                     | Rust                        | Difference                        |
+|----------------------|----------------------------|-----------------------------|-----------------------------------|
+| **Execution Time**   | 0.12 seconds      | 0.28 seconds       | Python is faster by ~0.16 s      |
+| **Memory Usage**     | 30.64 MB                    | 17.33 MB                     | Rust uses ~13.31 MB less memory   |
+
+### Performance comparison report (markdown)
+1. Set Executable Permissions:
+2. Run the Make Command:
+   ```bash
+   chmod +x generate_report.sh
+   ./generate_report.sh
+   ```
+[Performance Report](performance_report.md)
+
+## Summary of Improvements
+The Python version completes the process a little bit faster while Rust uses less memory for this particular dataset. 
+
+Rust, generally outperforms Python for CPU-bound tasks and is optimized for memory and performance in long-running applications or complex, multi-threaded scenarios. However, Python can sometimes be faster for certain types of tasks, especially I/O-bound or simple computational tasks, due to its fast startup, efficient libraries, and ability to handle asynchronous operations effectively. **In this case**, Python being faster than Rust is likely due to I/O-heavy operations or quick, short tasks.
+
+For resource usage, Rust has a clear advantage due to its unique memory management model, which eliminates the need for a garbage collector. Python, on the other hand, uses dynamic typing and relies on garbage collection, which can lead to higher memory usage and occasional pauses during cleanup cycles. **In this case**, we see that Rust used significantly less memory than Python for the same task. This difference—around 13.31 MB less memory in Rust—demonstrates Rust’s efficiency in resource management.
+
+In essence, Rust is better suited for scenarios where performance and efficient resource management are critical, like systems programming and high-performance applications. Python, however, remains highly productive for rapid development and prototyping, especially in areas like data science, where speed and memory usage can be traded off for ease of development.
+
+### Rust Preparation
 1. Open codespaces
 2. Install cargo
 >curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 >cargo --version
 
-### Build
+### Rust Build
 Rust is a compiled language and so to run programs you will need to compile the file first. This is done a few ways:
 
 >cargo check
@@ -92,57 +103,18 @@ Rust is a compiled language and so to run programs you will need to compile the 
 
 ![0](/imgs/000.png)
 ![1](/imgs/001.png)
-![2](/imgs/002.png)
-![3](/imgs/003.png)
-![4](/imgs/004.png)
-![5](/imgs/005.png)
+
 
 ### Project Breakdown
-In this project, I use rust to realize SQLite operation and use CLI(Command-Line Tool) features.
+In this project, I rewrite SQLite operation in Rust (/sqlite), including ETL (Extract, Transform, Load), CRUD (Create, Read, Update, Delete).
 
-See main.rs for a commented example of how we make our CLI. Note that by using clap over standard library options (std::env for rust or argparse for python) we get a lot of free functionality like help menu guides.
+I perform a list of commands and use sysinfo to track running time and memory usage (while using psutil in Python script for tracking).
 
-Add compiled binary (--release) to your path, this way you can use your CLI normally without using:
+See result in [Performance Report](performance_report.md)
 
->cargo run -- -\<flag> argument
-
-and instead:
-
->sqlite -c users
-
-Command to add compiled binary to path for use:
-
-*If in codespaces*
-
->export PATH=$PATH:/workspaces/\<REPO_NAME>/sqlite/target/release
-
-Once you build your CLI binary you can the use it like a regular CLI:
-![6](/imgs/006.png)
-
-#### CLI demo
-![7](/imgs/007.png)
-`sqlite -c table1` Create Table table1.
-
-`sqlite -l table1 ../data/customer_new.csv` Load data into table 'table1' from '../data/customer_new.csv'.
-
-`sqlite -q "SELECT * FROM table1;"` Query: SELECT * FROM table1;
-
-`sqlite -i table1 11 Remi female Durham` Insert person with ID '11' into the 'table1' table.
-
-`sqlite -u table1 11 Remi female 'Los Angeles'` Updating record in table 'table1' with ID 11.
-
-`sqlite -x table1 11` Delete record in table 'table1' with ID 11
-
-`sqlite -d table1` Table 'table1' dropped.
 
 ### Binary Download Link
-https://github.com/nogibjj/Xianjing_Huang_Mini_Proj_7/actions/runs/11467682732/artifacts/2090141328
+https://github.com/nogibjj/Xianjing_Huang_Mini_Proj_8/actions/runs/11542766983/artifacts/2109506629
 
 The binary location is what gets uploaded as an artifact in the yml file.
-![8](/imgs/008.png)
-
-### Continuous Integration (CI/CD Pipeline)
-
-![9](/imgs/009.png)
-
-
+![2](/imgs/002.png)

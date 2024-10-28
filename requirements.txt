@@ -6,3 +6,4 @@ pytest-cov==4.0.0
 requests>=2.31
 #rust based linter
 ruff==0.0.284
+psutil

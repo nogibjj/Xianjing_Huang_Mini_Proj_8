@@ -101,31 +101,48 @@ pub fn read_exec(conn: &Connection, table_name: &str) -> Result<(), Box<dyn Erro
     let mut stmt = conn.prepare(&query_string)?;
 
     // Use query_map to handle multiple rows
-    let rows = stmt.query_map([], |row| {
-        let id: i32 = row.get(0)?;
-        let country: String = row.get(1)?;
-        let confederation: String = row.get(2)?;
-        let population_share: f64 = row.get(3)?;
-        let tv_audience_share: f64 = row.get(4)?;
-        let gdp_weighted_share: f64 = row.get(5)?;
-        Ok((
-            id,
-            country,
-            confederation,
-            population_share,
-            tv_audience_share,
-            gdp_weighted_share,
-        ))
-    })?;
+    let rows: Vec<_> = stmt
+        .query_map([], |row| {
+            let id: i32 = row.get(0)?;
+            let country: String = row.get(1)?;
+            let confederation: String = row.get(2)?;
+            let population_share: f64 = row.get(3)?;
+            let tv_audience_share: f64 = row.get(4)?;
+            let gdp_weighted_share: f64 = row.get(5)?;
+            Ok((
+                id,
+                country,
+                confederation,
+                population_share,
+                tv_audience_share,
+                gdp_weighted_share,
+            ))
+        })?
+        .collect::<Result<Vec<_>, _>>()?;
 
     // Iterate over the rows and print the results
-    for row in rows {
+    // for row in rows {
+    //     let (id, country, confederation, population_share, tv_audience_share, gdp_weighted_share) =
+    //         row?;
+    //     println!(
+    //         "ID: {}, Country: {}, Confederation: {}, Population Share: {}, TV Audience Share: {}, GDP Weighted Share: {}",
+    //         id, country, confederation, population_share, tv_audience_share, gdp_weighted_share
+    //     );
+    // }
+
+    // Limit output to first 10 rows
+    let max_rows = 10;
+    for row in rows.iter().take(max_rows) {
         let (id, country, confederation, population_share, tv_audience_share, gdp_weighted_share) =
-            row?;
+            row;
         println!(
             "ID: {}, Country: {}, Confederation: {}, Population Share: {}, TV Audience Share: {}, GDP Weighted Share: {}",
             id, country, confederation, population_share, tv_audience_share, gdp_weighted_share
         );
+    }
+
+    if rows.len() > max_rows {
+        println!("...\nand {} more rows not shown", rows.len() - max_rows);
     }
 
     Ok(())
